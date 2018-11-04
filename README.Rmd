@@ -1,1 +1,8 @@
-*My my course diary: https://peempe.github.io/IODS-project/ *
+
+---
+title: "Course diary"
+output: github_document
+---
+Introduction to Open Data Science (IODS)
+
+You can find my course diary from here: https://peempe.github.io/IODS-project/
