@@ -1,5 +1,5 @@
 
 # About the project
 
-*Write a short description about the course and add a link to your github repository here. https://github.com/peempe/IODS-project*
+*Introduction to Open Data Science course, my github repository: ttps://github.com/peempe/IODS-project.*
 
