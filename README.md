@@ -1,6 +1,4 @@
-Course diary
-================
 
-Introduction to Open Data Science (IODS)
+I'm attending to University of Helsinki's Introduction to Open Data Science (IODS) course during fall 2018.
 
 You can find my course diary from here: <https://peempe.github.io/IODS-project/>
