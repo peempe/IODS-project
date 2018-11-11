@@ -1,7 +1,65 @@
-# Insert chapter 2 title here
+# Regression and model validation
 
-*Describe the work you have done this week and summarize your learning.*
+*Learning2014 dataset includes information about students who attended the basic statistics course at the end of year 2014. The dataset includes 7 variables and 166 observations. The variables are gender, age, attitude towards statistics, points in the final exam and variables addressing deep, surface, and strategic learning.*
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using  
+*More information about the dataset can be found [here](http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS2-meta.txt).*
+
+First, we need to get the dataset to R. I had some problems with my Mac (even though I double checked it like thousand times in the "Data wrangling" part), so I decided to download it via link.
+```{r}
+setwd("~/Documents/GitHub/IODS-project/data")
+learning2014 <- read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/learning2014.txt",
+                           sep = ",", header = T)
+```
+
+
+### Overview of the data
+
+Second, we need to have an access to *ggplot2* and *GGally*-packages. Remember to install them first!
+```{r}
+library(ggplot2)
+library(GGally)
+```
+
+Next, let's see how the data looks like.
+```{r}
+plot1 <- ggpairs(learning2014, mapping = aes(col = gender, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+plot1
+```
+
+Here are some main points about the output:
+
+* Most of the participants are women in their twenties.
+
+* The highest correlation is between attitude and point, addressing that a good attitude towards statistics and/or the course is associated with higher points in the final exam.
+
+* The lowest correlation is between deep learning strategy and point, indicating that they have nothing to do with each others.
+
+
+### Regression model
+
+Now we could examine a bit do gender, age, and attitude predict points in the final exam. 
+```{r}
+points_model <- lm(points ~ gender + age + attitude, data = learning2014)
+summary(points_model)
+```
+In the model above, only attitude is statistically significant variable with p-value < .001. The model shows that better attitude towards statistics/course precits higher points in the exam. Because gender and age are not significant variables, we can remove them from the model and run the model again only with attitude-variable.
+
+```{r}
+points_att <- lm(points ~ attitude, data = learning2014)
+summary(points_att)
+```
+The attitude is still highly significant and it explains 19 % of the value of points (R-square). Note, that the R-square value did not change much when the two other variables were removed from the model.
+
+
+### Diagnostic plots
+
+Last, after fitting the model and intepreting the results, we should check the diagnostic plots. The following commands do the trick:
+```{r}
+points_att <- lm(points ~ attitude, data = learning2014)
+plot(points_att, which = c(1, 2, 5), par(mfrow = c(2,2)))
+```
+
+All plots shows that the residuals are nicely spread on both sides of 0 (Residuals vs Fitted values), follow the line well and are (quite) normally distributed (Normal QQ-plot), and the few outliers do not influence the analysis too much (Residuals vs Leverage). The plots indicate that our model fit well to the data and the association between attitude and points is linear (as it should be when using linear regression). 
+
+
+
