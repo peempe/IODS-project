@@ -31,11 +31,29 @@ The aim of this week is to analyze the relationship of high/low alcohol consumpt
 library(ggplot2)
 ```
 
+**Mother's education**
+```{r}
+Medutable <- table(alc$Medu,alc$high_use)
+Medutable
+```
+
+**Quality of family relationships**
+```{r}
+FamRtable <- table(alc$famrel,alc$high_use)
+FamRtable
+```
+
+**Current health status**
+```{r}
+Healthtable <- table(alc$health,alc$high_use)
+Healthtable
+```
+
 **Number of school absences**
 ```{r}
 g1 <- ggplot(alc, aes(x = high_use, y = absences, col = sex))
 g1 + geom_boxplot() + ggtitle("School absences by alcohol consumption")
 ```
 
-
+**Work in progress... :)**
 
