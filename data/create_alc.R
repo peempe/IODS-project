@@ -68,3 +68,4 @@ glimpse(alc)
 
 # Saving the dataset
 write.table(alc, file = "alc.csv")
+View(alc)

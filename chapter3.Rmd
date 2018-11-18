@@ -1,0 +1,40 @@
+# Logistic regression
+
+### Reading the data
+
+```{r results = 'hide'}
+alc <- read.table("alc.csv", sep = ";", header = T)
+View(alc)
+colnames(alc)
+```
+
+*The dataset is jointed from two different datasets and it includes information about students' alcohol consumpiton. The infromation is gathered from Portuguese and Math classes from two Portuguese schools*
+
+*More information about the dataset can be found [here](https://archive.ics.uci.edu/ml/datasets/Student+Performance).*
+
+
+### The research plan and hypotheses
+
+The aim of this week is to analyze the relationship of high/low alcohol consumption (AC) and following variables: mother's education (Medu), quality of family realtionships (famrel), current health status (health), and number of school absences (absences).
+
+**My hypotheses are:**
+1. Mother's low education is associated with higher AC.
+2. Poor quality of family relationships is associated with higher AC.
+3. Poor health status is associated with higher AC.
+4. Higher number of school absences is associated with higher AC.
+
+
+### Preliminary analyses
+
+```{r}
+library(ggplot2)
+```
+
+**Number of school absences**
+```{r}
+g1 <- ggplot(alc, aes(x = high_use, y = absences, col = sex))
+g1 + geom_boxplot() + ggtitle("School absences by alcohol consumption")
+```
+
+
+
