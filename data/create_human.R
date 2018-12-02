@@ -1,5 +1,5 @@
 # Emma Peltomaa
-# 25.11.2018
+# 25.11.2018 & 2.12.2018
 
 # Reading two datasets from here:
 
@@ -34,3 +34,62 @@ human <- inner_join(hd, gii, by = join_by)
 # Saving the dataset
 write.table(human, file = "human.csv")
 View(human)
+
+
+### Continuing data wrangling 2.12.2018
+
+# Describing the dataset
+dim(human) # 195 rows/observations, 19 columns/variables
+str(human)
+summary(human)
+
+# Variable names' meanings:
+"hdir" = HDI Rank
+"country" = Country names
+"hdi" = Human Development Index (HDI)
+"liex" = Life Expectancy at Birth
+"exyedu" = Expected Years of Education
+"myedu" = Mean Years of Education
+"gni" = Gross National Income (GNI) per Capita
+"gnir_hdir" = GNI per Capita Rank Minus HDI Rank
+"giir" = GII Rank
+"gii" = Gender Inequality Index (GII)
+"mamor" = Maternal Mortality Ratio
+"adbir" = Adolescent Birth Rate
+"perep" = Percent Representation in Parliament
+"seduf" = Population with Secondary Education (Female)
+"sedum" = Population with Secondary Education (Male)
+"lfprf" = Labour Force Participation Rate (Female)
+"lfprm" = Labour Force Participation Rate (Male)
+"edur" = seduf / sedum
+"lfpr" = lfprf / lfprm
+
+# Mutating the data
+library(stringr)
+str(human$gni)
+str_replace(human$gni, pattern=",", replace ="") %>% as.numeric
+
+# Excluding unneeded variables
+keep <- c("country", "seduf", "lfprf", "exyedu", "liex", "gni", "mamor", "adbir", "perep")
+human <- select(human, one_of(keep))
+
+# Removing all rows with missing values
+complete.cases(human)
+data.frame(human[-1], comp = complete.cases(human))
+human_ <- filter(human, complete.cases(human))
+
+# Removing the observations which are realted to regions instead of countries
+tail(human_, n = 10)
+last <- nrow(human_) - 7
+human_ <- human_[1:last, ]
+rownames(human_) <- human_$country
+human <- select(human_, -country)
+
+write.table(human, file = "human.csv")
+
+
+
+
+
+
+
