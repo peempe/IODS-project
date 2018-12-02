@@ -5,18 +5,22 @@
 *The dataset is a combination of two datasets; [Human Development](http://hdr.undp.org/en/content/human-development-index-hdi) and [Gender Inequality](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf). After some "data wrangling", the dataset looks like [this](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human2.txt). The wrangling steps can be seen from [Rscript-file in my GitHub](https://github.com/peempe/IODS-project/blob/master/data/create_human.R).*
 
 ```{r}
-str(human) # 155 observations and 8 variables
-summary(human)
+human2 <- read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human2.txt", 
+                  sep = ",", header = T)
+str(human2) # 155 observations and 8 variables
+summary(human2)
 ```
 
 Let's investigate the association between variables with a correlation matrix:
 ```{r}
 library("dplyr")
+library("stringr")
+library("MASS")
+library("tidyr")
 library("corrplot")
 library("GGally")
-ggpairs(human) # Great, an error again. Let's fix it...
-ggpairs(human, cardinality_threshold = 155) # Increasing the 'cardinality_threshold' parameter
-cor(human) %>% corrplot()
+ggpairs(human2) 
+cor(human2) %>% corrplot()
 ```
 
 

@@ -71,7 +71,7 @@ summary(human)
 
 # Mutating the data
 str(human$gni)
-str_replace(human$gni, pattern=",", replace ="") %>% as.numeric
+str_replace(human$gni, pattern=",", replace ="") %>% as.numeric # Somehow the numeric values do not save in to the dataset.
 
 # Excluding unneeded variables
 keep <- c("country", "seduf", "lfprf", "exyedu", "liex", "gni", "mamor", "adbir", "perep")
