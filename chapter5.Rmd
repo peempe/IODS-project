@@ -4,6 +4,8 @@
 
 *The dataset is a combination of two datasets; [Human Development](http://hdr.undp.org/en/content/human-development-index-hdi) and [Gender Inequality](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf). After some "data wrangling", the dataset looks like [this](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human2.txt). The wrangling steps can be seen from [Rscript-file in my GitHub](https://github.com/peempe/IODS-project/blob/master/data/create_human.R).*
 
+I decided to download the data from the link because somehow the mutation from string values to numeric did not saved in to the human data and I didn't have time to figure out what was the problem.
+
 ```{r}
 human2 <- read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human2.txt", 
                   sep = ",", header = T)
@@ -27,14 +29,65 @@ cor(human2) %>% corrplot()
 ### Perform principal component analysis (PCA)
 
 ```{r}
-pca_human <- prcomp(human) # PCA
+pca_human <- prcomp(human2) # PCA
 biplot(pca_human, choices = 1:2, cex = c(0.8, 1), col = c("grey40", "deeppink2")) #Biplot
+
+s <- summary(pca_human)
+s
+pca_pr <- round(100*s$importance[2, ], digits = 1)
+pca_pr
+
 ```
 
+Not really working with unstandardized data. Let's try after standardation:
+
+```{r}
+human2_std <- scale(human2)
+summary(human2_std)
+pca_human2 <- prcomp(human2_std) # PCA
+
+s2 <- summary(pca_human2)
+s2
+pca_pr2 <- round(100*s2$importance[2, ], digits = 1)
+pca_pr2
+
+pc_lab <- paste0(names(pca_pr2), " (", pca_pr2, "%)")
+biplot(pca_human2, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2]) # Biplot
+```
+
+Now the biplot looks much better. 
 
 
+### Interpretations
+
+This data cleary need standardazion to be analyzed (and especially interpret) with PCA. The unstandardized PCA accuse that the first principal component (PC) explains 100 % of the variance and so cannot separete the effect of component. After standardazion, however, the first PCA explain 53,6 % of the variance and the second one 16,2 %. ...Sorry, I didn't have time to finish the intepretation.
 
 
+### Tea dataset & Multiple Correspondence Analysis (MCA)
+
+First, a quick overview of the dataset:
+
+```{r}
+library("FactoMineR")
+data("tea")
+str(tea) 
+dim(tea) # 300 observations, 36 variables
+```
+
+Second, MCA (with only few variables):
+```{r}
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
+tea_time <- dplyr::select(tea, one_of(keep_columns))
+
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar() +
+theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+mca <- MCA(tea_time, graph = FALSE)
+summary(mca)
+plot(mca, invisible=c("ind"), habillage = "quali")
+```
+
+Sorry, I ran out of time and couldn't intepret the results. :(
 
 
 
