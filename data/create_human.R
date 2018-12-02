@@ -1,6 +1,12 @@
 # Emma Peltomaa
 # 25.11.2018 & 2.12.2018
 
+library("dplyr")
+library("stringr")
+library("MASS")
+library("tidyverse")
+library("tidyr")
+
 # Reading two datasets from here:
 
 # Human development, more information: http://hdr.undp.org/en/content/human-development-index-hdi
@@ -23,7 +29,6 @@ colnames(hd) <- c("hdir", "country", "hdi", "liex", "exyedu", "myedu", "gni", "g
 colnames(gii) <- c("giir", "country", "gii", "mamor", "adbir", "perep", "seduf", "sedum", "lfprf", "lfprm")
 
 # Mutation of gii-data
-library(dplyr)
 gii <- mutate(gii, edur = seduf / sedum)
 gii <- mutate(gii, lfpr = lfprf / lfprm)
 
@@ -65,13 +70,12 @@ summary(human)
 "lfpr" = lfprf / lfprm
 
 # Mutating the data
-library(stringr)
 str(human$gni)
 str_replace(human$gni, pattern=",", replace ="") %>% as.numeric
 
 # Excluding unneeded variables
 keep <- c("country", "seduf", "lfprf", "exyedu", "liex", "gni", "mamor", "adbir", "perep")
-human <- select(human, one_of(keep))
+human <- dplyr::select(human, one_of(keep))
 
 # Removing all rows with missing values
 complete.cases(human)
@@ -83,7 +87,7 @@ tail(human_, n = 10)
 last <- nrow(human_) - 7
 human_ <- human_[1:last, ]
 rownames(human_) <- human_$country
-human <- select(human_, -country)
+human <- dplyr::select(human_, -country)
 
 write.table(human, file = "human.csv")
 View(human)
