@@ -86,7 +86,7 @@ rownames(human_) <- human_$country
 human <- select(human_, -country)
 
 write.table(human, file = "human.csv")
-
+View(human)
 
 
 
