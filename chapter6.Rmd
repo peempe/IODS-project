@@ -1,6 +1,6 @@
 # Analysis of longitudinal data
 
-```{r results = hide}
+```{r results = 'hide'}
 library(dplyr)
 library(tidyr)
 ```
