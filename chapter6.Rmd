@@ -1,0 +1,194 @@
+# Analysis of longitudinal data
+
+```{r results = hide}
+library(dplyr)
+library(tidyr)
+```
+
+### RATS data
+
+*First, two variables need to be factored again.*
+```{r}
+RATS <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt", header = TRUE, sep = '\t')
+
+RATS$ID <- factor(RATS$ID)
+RATS$Group <- factor(RATS$Group)
+glimpse(RATS)
+
+RATSL <- RATS %>%
+  gather(key = WD, value = Weight, -ID, -Group) %>%
+  mutate(Time = as.integer(substr(WD,3,4)))
+glimpse(RATSL)
+```
+
+
+Let's begin with plotting the data to identify the observations in each group (but ignoring the longitudinal nature of the data at this point).
+
+```{r}
+library(ggplot2)
+
+ggplot(RATSL, aes(x = Time, y = Weight, group = ID)) +
+  geom_line(aes(linetype = Group)) +
+  scale_x_continuous(name = "Time (days)", breaks = seq(0, 60, 10)) + 
+  scale_y_continuous(name = "Weight (grams)") + 
+  theme(legend.position = "top")
+```
+
+As we can see from the plot, group 1 cleary differs from two other groups. Rats in group 1 weigh less and their weight does not rise during the days compared to two other groups.
+
+Next, we can build a linear model to examine does group and time predict weight as the plot suggest. We cannot use basic linear regression model because it assumes that the observations are independent and in this case they are not as we examine the weights of same rats. Let's fit *random intercept model* to study if group and time predict the rat's weight.
+```{r}
+library(lme4)
+
+RATS_ref <- lmer(Weight ~ Time + Group + (1 | ID), data = RATSL, REML = FALSE)
+RATS_ref
+```
+
+After modelling we note that standard deviation is quite big suggesting large variablility between rats. Let's take one step foward and see how the *random slope model* works. 
+
+*Fitting a random intercept and random slope model allows the linear regression fits for each individual to differ in intercept but also in slope. This way it is possible to account for the individual differences in the rats' growth profiles, but also the effect of time.* 
+
+```{r}
+RATS_ref1 <- lmer(Weight ~ Time + Group + (Time | ID), data = RATSL, REML = FALSE)
+RATS_ref1
+```
+
+The two models seem not to be very different. We can also perform an ANOVA test to compare the models.
+
+```{r}
+anova(RATS_ref1, RATS_ref)
+```
+
+The interpretation of the test can be done by looking the values of chi-squared statistics and p-value. Lower value address better fit against the comparison model: the random slope model seems to fit better.
+
+Finally, we can fit a random intercept and slope model that allows for a group × time interaction.
+```{r}
+RATS_ref2 <- lmer(Weight ~ Time * Group + (Time | ID), data = RATSL, REML = FALSE)
+summary(RATS_ref2)
+
+anova(RATS_ref2, RATS_ref1)
+```
+
+The model with interaction fits even better than the random slope model without it. We should also check the plot with observed values.
+```{r}
+Fitted <- fitted(RATS_ref2)
+RATSL <- RATSL %>%
+  mutate(Fitted)
+
+ggplot(RATSL, aes(x = Time, y = Fitted, group = ID)) +
+  geom_line(aes(linetype = Group)) +
+  scale_x_continuous(name = "Time (days)", breaks = seq(0, 60, 20)) +
+  scale_y_continuous(name = "Fitted weight (grams)") +
+  theme(legend.position = "top")
+```
+
+
+
+### BPRS data
+
+*First, two variables need to be factored again.*
+```{r}
+BPRS <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/BPRS.txt", sep  =" ", header = T)
+
+BPRS$treatment <- factor(BPRS$treatment)
+BPRS$subject <- factor(BPRS$subject)
+glimpse(BPRS)
+
+BPRSL <-  BPRS %>% gather(key = weeks, value = bprs, -treatment, -subject)
+BPRSL <-  BPRSL %>% mutate(week = as.integer(substr(weeks,5,5)))
+glimpse(BPRSL)
+```
+
+Let's begin by plotting the BPRS values for all 40 men, differentiating between the treatment groups into which the men have been randomized. 
+```{r}
+ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
+```
+
+At this point the plot mostly shows that even though there is a lot of variability between individuals, there seems to be less psychotic symptoms in group 1 after 8 weeks. 
+
+Next we should do some analysis to examine if this hypothesis is correct. First we can standardize the values of BPRS.
+```{r}
+BPRSL <- BPRSL %>%
+  group_by(week) %>%
+  mutate(stdbprs = (bprs - mean(bprs)) / sd(bprs)) %>%
+  ungroup()
+glimpse(BPRSL)
+```
+
+Let's plot the data again, now with the standardized values.
+```{r}
+ggplot(BPRSL, aes(x = week, y = stdbprs, linetype = subject)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  scale_y_continuous(name = "standardized bprs")
+```
+
+After standardizing the values, the plot shows that the variability is still large but now in group 1 psychotic symptoms do not seem to reduce.
+
+Next we can try produce a graph showing average profiles for each treatment group along with some indication of the variation of the observations at each time point.
+```{r}
+n <- BPRSL$week %>% unique() %>% length()
+BPRSS <- BPRSL %>%
+  group_by(treatment, week) %>%
+  summarise( mean = mean(bprs), se = sd(bprs) / sqrt(n) ) %>%
+  ungroup()
+glimpse(BPRSS)
+
+# Plot the mean profiles
+ggplot(BPRSS, aes(x = week, y = mean, linetype = treatment, shape = treatment)) +
+  geom_line() +
+  scale_linetype_manual(values = c(1,2)) +
+  geom_point(size=3) +
+  scale_shape_manual(values = c(1,2)) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se, linetype="1"), width=0.3) +
+  theme(legend.position = c(0.8,0.8)) +
+  scale_y_continuous(name = "mean(bprs) +/- se(bprs)")
+
+```
+
+Okay, the two groups seems to overlap quite much. Let's find out if there are an outlier which could explain this situation.
+```{r}
+BPRSL8S <- BPRSL %>%
+  filter(week > 0) %>%
+  group_by(treatment, subject) %>%
+  summarise( mean=mean(bprs) ) %>%
+  ungroup()
+glimpse(BPRSL8S)
+
+# Draw a boxplot of the mean versus treatment
+ggplot(BPRSL8S, aes(x = treatment, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun.y = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(bprs), weeks 1-8")
+```
+
+Hahaa, there is one outlier in group 2. Let's filter that one out and see the situation once again.
+
+```{r}
+BPRSL8S1 <- BPRSL8S %>% filter(mean < 70)
+glimpse(BPRSL8S1)
+
+ggplot(BPRSL8S1, aes(x = treatment, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun.y = "mean", geom = "point", shape=23, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(bprs), weeks 1-8")
+```
+
+Now it looks like that there are less psychotic symptoms in group 2. Next we should do some analysis to be more sure about it.
+
+```{r}
+t.test(mean ~ treatment, data = BPRSL8S1, var.equal = TRUE)
+BPRSL8S2 <- BPRSL8S %>% mutate(baseline = BPRS$week0)
+
+fit <- lm(mean ~ baseline + treatment, data = BPRSL8S2)
+
+anova(fit)
+```
+
+Yep, the t-test confirms that the BPRS score is lower in group 2 after 8 weeks.
